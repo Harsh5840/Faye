@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String     @id @default(uuid())
+  email      String     @unique
+  name       String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  meetings   Meeting[]
+}
+
+model Meeting {
+  id            String         @id @default(uuid())
+  user          User           @relation(fields: [userId], references: [id])
+  userId        String
+  title         String
+  isActive      Boolean        @default(true)
+  startedAt     DateTime       @default(now())
+  endedAt       DateTime?
+  pomodoros        PomodoroSession[]
+  documents         Document[]
+  voiceCommands    VoiceCommand[]
+  generalAIQueries    GeneralAIQuery[]
+  musicRequests       MusicRequest[]
+}
+
+model Document {
+  id          String     @id @default(uuid())
+  meeting     Meeting    @relation(fields: [meetingId], references: [id])
+  meetingId   String
+  filename    String
+  content     String     // Parsed content
+  summary     String?
+  createdAt   DateTime   @default(now())
+  quizzes     Quiz[]
+  ragHistory  RAGQuery[]
+}
+
+model Quiz {
+  id          String     @id @default(uuid())
+  document    Document   @relation(fields: [documentId], references: [id])
+  documentId  String
+  topic       String
+  questions   Question[]
+  createdAt   DateTime   @default(now())
+}
+
+model Question {
+  id        String   @id @default(uuid())
+  quiz      Quiz     @relation(fields: [quizId], references: [id])
+  quizId    String
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+}
+
+model RAGQuery {
+  id          String   @id @default(uuid())
+  document    Document @relation(fields: [documentId], references: [id])
+  documentId  String
+  query       String
+  response    String
+  createdAt   DateTime @default(now())
+}
+
+model PomodoroSession {
+  id          String     @id @default(uuid())
+  meeting     Meeting    @relation(fields: [meetingId], references: [id])
+  meetingId   String
+  startedAt   DateTime   @default(now())
+  endedAt     DateTime?
+  type        PomodoroType
+}
+
+enum PomodoroType {
+  FOCUS
+  SHORT_BREAK
+  LONG_BREAK
+}
+
+model VoiceCommand {
+  id          String     @id @default(uuid())
+  meeting     Meeting    @relation(fields: [meetingId], references: [id])
+  meetingId   String
+  commandText String
+  timestamp   DateTime   @default(now())
+}
+
+model GeneralAIQuery {
+  id          String     @id @default(uuid())
+  meeting     Meeting    @relation(fields: [meetingId], references: [id])
+  meetingId   String
+  question    String
+  response    String
+  createdAt   DateTime   @default(now())
+}
+
+model MusicRequest {
+  id         String     @id @default(uuid())
+  meeting    Meeting    @relation(fields: [meetingId], references: [id])
+  meetingId  String
+  trackName  String
+  artist     String?
+  playedAt   DateTime   @default(now())
+  source     String?    // e.g., "Spotify", "YouTube", "Local"
+}
+
